@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "litestar-habittracker"
+version = "0.1.0"
+description = "API for habit tracker app"
+authors = ["darialissi"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+litestar = {extras = ["standard"], version = "^2.12.1"}
+litestar-asyncpg = "^0.2.0"
+sqlalchemy = "^2.0.36"
+pydantic = "^2.9.2"
+bcrypt = "^4.2.0"
+pyjwt = {extras = ["crypto"], version = "^2.9.0"}
+pydantic-settings = "^2.6.1"
+advanced-alchemy = "^0.23.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+isort = "^5.13.2"
+Flake8-pyproject = "^1.2.3"
+
+[tool.black]
+line-length = 90
+target_version = ["py311"]
+
+[tool.isort]
+profile = "black"
+py_version = 311
+
+[tool.flake8]
+ignore = ['E501']
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
