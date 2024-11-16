@@ -13,6 +13,6 @@ RUN poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi
 
 COPY . .
-WORKDIR /src
+WORKDIR src
 
 CMD ["litestar", "run", "--host", "0.0.0.0", "--port", "8000"]
