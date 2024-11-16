@@ -16,9 +16,7 @@ class UserService:
     async def add_user(self, user: UserDTO):
         u_dict = user.model_dump()
         password = u_dict.pop("password")
-        u_dict.update(
-            {"hashed_password": Password.hash_password(password).decode("utf-8")}
-        )
+        u_dict.update({"hashed_password": Password.hash_password(password).decode("utf-8")})
         user = await self.user_repo.add(self.user_repo.model_type(**u_dict))
         await self.user_repo.session.commit()
         return user

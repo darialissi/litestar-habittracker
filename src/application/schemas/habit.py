@@ -8,7 +8,7 @@ class HabitDTO(BaseModel):
     Схема модели Habit, валидирует ввод
     """
 
-    title: str
+    title: str = Field(min_length=5)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -20,11 +20,12 @@ class HabitReturnDTO(BaseModel):
 
     id: int
     title: str
-    current_strike_days: int = Field(default=0, ge=0)
-    max_strike_days: int = Field(default=0, ge=0)
+    current_strike_start_date: datetime
+    current_strike_days: int = Field(ge=0)
+    max_strike_days: int = Field(ge=0)
     created_at: datetime
     updated_at: datetime
 
-    user_id: int
+    author: str
 
     model_config = ConfigDict(from_attributes=True)

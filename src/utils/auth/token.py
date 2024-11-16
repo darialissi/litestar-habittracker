@@ -29,7 +29,7 @@ class Token:
     def decode_jwt(
         token: str,
         private_key: str,
-    ):
+    ) -> dict:
         try:
             return jwt.decode(token, private_key, algorithms=["HS256"])
         except jwt.exceptions.InvalidTokenError:

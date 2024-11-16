@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     TOKEN_KEY_SECRET: str
     TOKEN_EXPIRE_MINUTES: int
 
+    AUTH_COOKIE: str
+
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
