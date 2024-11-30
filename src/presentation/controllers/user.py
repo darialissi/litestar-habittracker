@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from litestar import Controller, Request, Response, get, post
 from litestar.contrib.pydantic import PydanticDTO
-from litestar.datastructures import State
+from litestar.datastructures import State, Cookie
 from litestar.di import Provide
 
 from application.schemas.user import UserDTO, UserReturnDTO
@@ -33,14 +33,13 @@ class UserController(Controller):
 
         token = await service.auth_user(user)
 
-        resp = Response(UserReturnDTO.model_validate(user))
-
-        resp.set_cookie(
-            key=settings.AUTH_COOKIE,
-            value=token,
-            max_age=timedelta(minutes=settings.TOKEN_EXPIRE_MINUTES),
-            httponly=True,
-        )
+        resp = Response(UserReturnDTO.model_validate(user),
+                        cookies=[Cookie(
+                                key=settings.AUTH_COOKIE,
+                                value=token,
+                                max_age=timedelta(minutes=settings.TOKEN_EXPIRE_MINUTES),
+                                httponly=True)],
+                        )
 
         return resp
 
@@ -53,6 +52,5 @@ class UserController(Controller):
         request: Request[UsernameSchema, TokenSchema, State],
         service: UserService,
     ) -> Response[UserReturnDTO]:
-
         resp = await service.get_user(username=request.user.username)
         return Response(UserReturnDTO.model_validate(resp))

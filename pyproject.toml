@@ -19,6 +19,16 @@ advanced-alchemy = "^0.23.1"
 black = "^24.10.0"
 isort = "^5.13.2"
 Flake8-pyproject = "^1.2.3"
+pytest-asyncio = "^0.24.0"
+pytest-dotenv = "^0.5.2"
+
+[tool.pytest.ini_options]
+env_override_existing_values = 1
+env_files = [".env-test"]
+pythonpath = [".", "src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+filterwarnings = "ignore::DeprecationWarning"
 
 [tool.black]
 line-length = 100

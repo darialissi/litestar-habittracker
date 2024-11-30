@@ -6,10 +6,11 @@ class Password:
     @staticmethod
     def hash_password(
         password: str,
-    ) -> bytes:
+    ) -> str:
         salt = bcrypt.gensalt()
         pwd_bytes: bytes = password.encode()
-        return bcrypt.hashpw(pwd_bytes, salt)
+        hashed = bcrypt.hashpw(pwd_bytes, salt)
+        return hashed.decode("utf-8")
 
     @staticmethod
     def validate_password(
