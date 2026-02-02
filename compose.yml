@@ -1,0 +1,74 @@
+services:
+
+  app:
+    container_name: litestar_container
+    build:
+      context: .
+    env_file:
+      - .env-docker
+    ports:
+      - '8000:8000'
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    profiles: ["prod"]
+
+  db:
+    container_name: postgres_container
+    image: postgres:18
+    env_file:
+      - .env-docker
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: ["prod"]
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrations
+    container_name: migrations_container
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env-docker
+    restart: "no"
+    profiles: ["prod"]
+
+  db_dev:
+    container_name: postgres_dev_container
+    image: postgres:18
+    environment:
+      POSTGRES_DB: dev_db
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: qwerty
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql
+    profiles: ["dev"]
+
+  db_test:
+    container_name: postgres_test_container
+    image: postgres:18
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: test_db
+    ports:
+      - '5434:5432'
+    profiles: ["test"]
+
+volumes:
+  postgres_data:
+  postgres_dev_data:

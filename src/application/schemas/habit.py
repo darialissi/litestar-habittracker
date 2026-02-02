@@ -20,9 +20,9 @@ class HabitReturnDTO(BaseModel):
 
     id: int
     title: str
-    current_strike_start_date: datetime
-    current_strike_days: int = Field(ge=0)
-    max_strike_days: int = Field(ge=0)
+    current_streak_start_date: datetime
+    current_streak_days: int = Field(ge=0)
+    max_streak_days: int = Field(ge=0)
     created_at: datetime
     updated_at: datetime
 

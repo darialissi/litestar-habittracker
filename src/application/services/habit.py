@@ -20,17 +20,17 @@ class HabitService:
     async def update_habit_strike(self, habit: HabitReturnDTO):
         today = datetime.now(timezone.utc)
 
-        if habit.current_strike_start_date.date() + timedelta(days=1) == today.date() or (
-            habit.current_strike_start_date.date() != today.date() and habit.current_strike_days > 0
+        if habit.current_streak_start_date.date() + timedelta(days=1) == today.date() or (
+            habit.current_streak_start_date.date() != today.date() and habit.current_streak_days > 0
         ):
 
-            habit.current_strike_days += 1
+            habit.current_streak_days += 1
 
         else:
-            habit.current_strike_start_date = today
-            habit.current_strike_days = 1
+            habit.current_streak_start_date = today
+            habit.current_streak_days = 1
 
-        habit.max_strike_days = max(habit.max_strike_days, habit.current_strike_days)
+        habit.max_streak_days = max(habit.max_streak_days, habit.current_streak_days)
 
         habit = await self.habit_repo.update(self.habit_repo.model_type(**habit.model_dump()))
         await self.habit_repo.session.commit()

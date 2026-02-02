@@ -9,6 +9,7 @@ from app import app
 from application.schemas.habit import HabitDTO
 from application.schemas.user import UserDTO
 from config import settings
+from infrastructure.database import create_tables, drop_tables
 from utils.auth.token import Token
 
 app.debug = True
@@ -16,6 +17,8 @@ app.debug = True
 
 @pytest.fixture
 async def test_client() -> AsyncIterator[AsyncTestClient[Litestar]]:
+    app.on_startup.append(create_tables)
+    app.on_shutdown.append(drop_tables)
     async with AsyncTestClient(app=app) as client:
         yield client
 

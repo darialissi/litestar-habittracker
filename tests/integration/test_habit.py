@@ -26,7 +26,7 @@ class TestHabit:
         assert resp.json().get("id") == 1
         assert resp.json().get("author") == auth_data.username
         assert resp.json().get("title") == habit_data.title
-        assert resp.json().get("current_strike_days") == 0
+        assert resp.json().get("current_streak_days") == 0
 
     async def test_habit(
         self,
@@ -64,5 +64,5 @@ class TestHabit:
         )
 
         assert resp.status_code == status_codes.HTTP_200_OK
-        assert resp.json().get("current_strike_days") == 1
-        assert resp.json().get("max_strike_days") == 1
+        assert resp.json().get("current_streak_days") == 1
+        assert resp.json().get("max_streak_days") == 1

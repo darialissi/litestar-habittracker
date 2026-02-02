@@ -27,8 +27,8 @@ all_routers = Router(
 
 app = Litestar(
     route_handlers=[all_routers],
-    on_startup=[create_tables],
-    on_shutdown=[drop_tables],
+    # on_startup=[create_tables], # switched to alembic
+    # on_shutdown=[drop_tables], # switched to alembic
     middleware=[auth_mw],
     plugins=[sqlalchemy_plugin],
     openapi_config=OpenAPIConfig(
@@ -38,3 +38,8 @@ app = Litestar(
         render_plugins=[ScalarRenderPlugin()],
     ),
 )
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

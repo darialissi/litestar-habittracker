@@ -5,14 +5,15 @@ ENV PYTHONUNBUFFERED 1
 
 RUN pip install poetry
 
-WORKDIR /l_app
+WORKDIR /migrations
 
 COPY poetry.lock pyproject.toml /
 RUN poetry config virtualenvs.create false && \
     poetry install --without dev --no-interaction --no-ansi --no-root
 
-COPY . .
+COPY alembic.ini .
+COPY alembic/ ./alembic/
+COPY src/config.py ./src/config.py
+COPY src/domain/models/ ./src/domain/models/
 
-WORKDIR /l_app/src
-
-CMD ["python", "app.py"]
+CMD ["alembic", "upgrade", "head"]
