@@ -6,6 +6,7 @@ from application.schemas.user import UserDTO, UserReturnDTO
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestUser:
 
     async def test_signin(self, auth_data: UserDTO, test_client: AsyncTestClient[Litestar]):

@@ -7,6 +7,7 @@ from utils.auth.password import Password
 from utils.auth.token import Token
 
 
+@pytest.mark.unit
 class TestAuth:
     @pytest.mark.parametrize(
         "password",

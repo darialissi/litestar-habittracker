@@ -7,6 +7,7 @@ from application.schemas.user import UserDTO
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestHabit:
 
     async def test_add_habit(

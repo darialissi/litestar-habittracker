@@ -13,7 +13,6 @@ from presentation.dependencies import user_service
 
 
 class UserController(Controller):
-    dto = PydanticDTO[UserDTO]
     return_dto = PydanticDTO[UserReturnDTO]
 
     dependencies = {"service": Provide(user_service)}
@@ -21,6 +20,7 @@ class UserController(Controller):
     @post(
         path="/signin",
         summary="Аутентификация пользователя",
+        dto=PydanticDTO[UserDTO],
     )
     async def auth_user(
         self,

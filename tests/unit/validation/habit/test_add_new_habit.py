@@ -1,0 +1,73 @@
+import unittest.mock
+
+import pytest
+from litestar import Litestar, Response, status_codes
+from litestar.testing import AsyncTestClient
+
+from application.schemas.habit import HabitReturnDTO
+from application.services.habit import HabitService
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.validation
+@pytest.mark.parametrize(
+    """
+    habit_dict,
+    expected_status_code
+    """,
+    [
+        pytest.param(
+            dict(title="test habit"),
+            status_codes.HTTP_201_CREATED,
+            id="OK",
+        ),
+        pytest.param(
+            dict(),
+            status_codes.HTTP_400_BAD_REQUEST,
+            id="FAIL: missing title",
+        ),
+        pytest.param(
+            dict(title="a" * 1),
+            status_codes.HTTP_400_BAD_REQUEST,
+            id="FAIL: short title",
+        ),
+        pytest.param(
+            dict(title="a" * 51),
+            status_codes.HTTP_400_BAD_REQUEST,
+            id="FAIL: long title",
+        ),
+    ],
+)
+async def test_add_new_habit(
+    habit_dict: dict,
+    expected_status_code: int,
+    add_habit_resp_dict: dict,
+    token_cookie: dict,
+    test_client: AsyncTestClient[Litestar],
+):
+    """Тест проверяет валидацию модели на уровне эндпоинта добавление новой привычки."""
+
+    with (
+        unittest.mock.patch.object(
+            target=HabitService,
+            attribute=HabitService.get_habit.__name__,
+            new=unittest.mock.AsyncMock(return_value=None),
+        ),
+        unittest.mock.patch.object(
+            target=HabitService,
+            attribute=HabitService.add_habit.__name__,
+            new=unittest.mock.AsyncMock(return_value=add_habit_resp_dict),
+        ) as mock_habit,
+    ):
+
+        resp: Response[HabitReturnDTO] = await test_client.post(
+            "/api/habits", json=habit_dict, cookies=token_cookie
+        )
+
+        assert resp.status_code == expected_status_code
+
+        if resp.status_code == status_codes.HTTP_201_CREATED:
+            response = resp.json()
+            assert response["id"] == mock_habit.return_value["id"]
+            assert response["title"] == mock_habit.return_value["title"]

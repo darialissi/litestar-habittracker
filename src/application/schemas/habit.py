@@ -8,9 +8,17 @@ class HabitDTO(BaseModel):
     Схема модели Habit, валидирует ввод
     """
 
-    title: str = Field(min_length=5)
+    title: str = Field(min_length=2, max_length=50)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class HabitCounterUpdateDTO(BaseModel):
+    """
+    Схема модели Habit, валидирует ввод при обновлении счетчика привычки
+    """
+
+    title: str = Field(min_length=2, max_length=50)
 
 
 class HabitReturnDTO(BaseModel):

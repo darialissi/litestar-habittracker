@@ -4,14 +4,13 @@ from litestar.datastructures import State
 from litestar.di import Provide
 from litestar.exceptions import HTTPException
 
-from application.schemas.habit import HabitDTO, HabitReturnDTO
+from application.schemas.habit import HabitDTO, HabitCounterUpdateDTO, HabitReturnDTO
 from application.services.habit import HabitService
 from presentation.auth.schemas import TokenSchema, UsernameSchema
 from presentation.dependencies import habit_service
 
 
 class HabitController(Controller):
-    dto = PydanticDTO[HabitDTO]
     return_dto = PydanticDTO[HabitReturnDTO]
 
     dependencies = {"service": Provide(habit_service)}
@@ -19,6 +18,7 @@ class HabitController(Controller):
     @post(
         path="/",
         summary="Добавление новой полезной привычки",
+        dto=PydanticDTO[HabitDTO],
     )
     async def add_new_habit(
         self,
@@ -38,19 +38,20 @@ class HabitController(Controller):
 
     @patch(
         path="/",
-        summary="Обновление трекера полезной привычки",
+        summary="Обновление полезной привычки по названию (счетчик +1 день подряд)",
+        dto=PydanticDTO[HabitCounterUpdateDTO],
     )
     async def update_habit(
         self,
-        title: str,
+        data: HabitCounterUpdateDTO,
         request: Request[UsernameSchema, TokenSchema, State],
         service: HabitService,
     ) -> Response[HabitReturnDTO]:
 
-        if not (habit := await service.get_habit(title=title, author=request.user.username)):
+        if not (habit := await service.get_habit(title=data.title, author=request.user.username)):
             raise HTTPException(
                 status_code=status_codes.HTTP_404_NOT_FOUND,
-                detail=f"У пользователя <{request.user.username}> нет привычки <{title}>",
+                detail=f"У пользователя <{request.user.username}> нет привычки <{data.title}>",
             )
 
         resp = await service.update_habit_strike(HabitReturnDTO.model_validate(habit))
