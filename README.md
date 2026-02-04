@@ -29,7 +29,7 @@ docker compose --profile prod up
 0. На основе **.env.example** создать **.env** в корне проекта
 1. Запустить через оболочку **dev.sh** (при необходимости сделать файл исполняемым: `chmod +x dev.sh`)
 
-## Тестирование [test] (be upgraded)
+## Тестирование [test]
 
 ### Unit
 

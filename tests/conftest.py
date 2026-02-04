@@ -6,7 +6,7 @@ from litestar import Litestar
 from litestar.testing import AsyncTestClient
 
 from app import app
-from application.schemas.habit import HabitDTO
+from application.schemas.habit import HabitCounterUpdateDTO, HabitDTO
 from application.schemas.user import UserDTO
 from config import settings
 from infrastructure.database import create_tables, drop_tables
@@ -48,7 +48,12 @@ async def signin_fixture(
 
 @pytest.fixture
 def habit_data() -> HabitDTO:
-    return HabitDTO(title="Уделять 1 час чтению книги ежедневно")
+    return HabitDTO(title="Чтение тех. литературы")
+
+
+@pytest.fixture
+def habit_counter_data() -> HabitCounterUpdateDTO:
+    return HabitCounterUpdateDTO(title="Чтение тех. литературы")
 
 
 @pytest.fixture

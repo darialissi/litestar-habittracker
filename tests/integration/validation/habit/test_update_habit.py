@@ -9,7 +9,7 @@ from application.services.habit import HabitService
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.validation
 @pytest.mark.parametrize(
     """
@@ -19,7 +19,7 @@ from application.services.habit import HabitService
     [
         pytest.param(
             dict(title="test habit"),
-            status_codes.HTTP_201_CREATED,
+            status_codes.HTTP_200_OK,
             id="OK",
         ),
         pytest.param(
@@ -39,35 +39,30 @@ from application.services.habit import HabitService
         ),
     ],
 )
-async def test_add_new_habit(
+async def test_update_habit(
     habit_dict: dict,
     expected_status_code: int,
-    add_habit_resp_dict: dict,
+    update_habit_resp_dict: dict,
     token_cookie: dict,
     test_client: AsyncTestClient[Litestar],
 ):
-    """Тест проверяет валидацию модели на уровне эндпоинта добавление новой привычки."""
+    """Тест проверяет валидацию модели на уровне эндпоинта обновление привычки."""
 
     with (
         unittest.mock.patch.object(
             target=HabitService,
-            attribute=HabitService.get_habit.__name__,
-            new=unittest.mock.AsyncMock(return_value=None),
-        ),
-        unittest.mock.patch.object(
-            target=HabitService,
-            attribute=HabitService.add_habit.__name__,
-            new=unittest.mock.AsyncMock(return_value=add_habit_resp_dict),
+            attribute=HabitService.update_habit.__name__,
+            new=unittest.mock.AsyncMock(return_value=update_habit_resp_dict),
         ) as mock_habit,
     ):
 
-        resp: Response[HabitReturnDTO] = await test_client.post(
+        resp: Response[HabitReturnDTO] = await test_client.patch(
             "/api/habits", json=habit_dict, cookies=token_cookie
         )
 
         assert resp.status_code == expected_status_code
 
-        if resp.status_code == status_codes.HTTP_201_CREATED:
+        if resp.status_code == status_codes.HTTP_200_OK:
             response = resp.json()
             assert response["id"] == mock_habit.return_value["id"]
-            assert response["title"] == mock_habit.return_value["title"]
+            assert response["updated_at"] == mock_habit.return_value["updated_at"]

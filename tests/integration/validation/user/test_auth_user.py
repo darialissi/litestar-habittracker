@@ -13,7 +13,7 @@ USER = dict(
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.validation
 @pytest.mark.parametrize(
     """
@@ -66,14 +66,9 @@ async def test_auth_user(
     with (
         unittest.mock.patch.object(
             target=UserService,
-            attribute=UserService.get_user.__name__,
-            new=unittest.mock.AsyncMock(return_value=USER),
-        ) as mock_user,
-        unittest.mock.patch.object(
-            target=UserService,
             attribute=UserService.auth_user.__name__,
-            new=unittest.mock.AsyncMock(return_value="mocked_token"),
-        ),
+            new=unittest.mock.AsyncMock(return_value=(USER, "mocked_token")),
+        ) as mock_user,
     ):
 
         resp: Response[UserReturnDTO] = await test_client.post(
@@ -84,6 +79,7 @@ async def test_auth_user(
 
         if resp.status_code == status_codes.HTTP_201_CREATED:
             response = resp.json()
-            assert response["id"] == mock_user.return_value["id"]
-            assert response["username"] == mock_user.return_value["username"]
+            user = mock_user.return_value[0]
+            assert response["id"] == user["id"]
+            assert response["username"] == user["username"]
             assert resp.headers.get("set-cookie") is not None

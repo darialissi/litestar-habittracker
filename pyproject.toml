@@ -35,6 +35,7 @@ markers = [
     "unit: mark a test as a unit test",      
     "validation: mark a test as a validation test",               
 ] 
+addopts = "--import-mode=importlib"
 
 [tool.black]
 line-length = 100

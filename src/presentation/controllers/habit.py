@@ -4,7 +4,8 @@ from litestar.datastructures import State
 from litestar.di import Provide
 from litestar.exceptions import HTTPException
 
-from application.schemas.habit import HabitDTO, HabitCounterUpdateDTO, HabitReturnDTO
+from application.schemas.habit import HabitCounterUpdateDTO, HabitDTO, HabitReturnDTO
+from application.services import errors
 from application.services.habit import HabitService
 from presentation.auth.schemas import TokenSchema, UsernameSchema
 from presentation.dependencies import habit_service
@@ -27,13 +28,14 @@ class HabitController(Controller):
         service: HabitService,
     ) -> Response[HabitReturnDTO]:
 
-        if await service.get_habit(title=data.title, author=request.user.username):
+        try:
+            resp = await service.add_new_habit(data=data, username=request.user.username)
+        except errors.HabitAlreadyExistsError as exc:
             raise HTTPException(
                 status_code=status_codes.HTTP_400_BAD_REQUEST,
-                detail=f"У пользователя <{request.user.username}> уже есть привычка <{data.title}>",
+                detail=exc.message,
             )
 
-        resp = await service.add_habit(data, user_fk=request.user.username)
         return Response(HabitReturnDTO.model_validate(resp))
 
     @patch(
@@ -48,13 +50,14 @@ class HabitController(Controller):
         service: HabitService,
     ) -> Response[HabitReturnDTO]:
 
-        if not (habit := await service.get_habit(title=data.title, author=request.user.username)):
+        try:
+            resp = await service.update_habit(data=data, username=request.user.username)
+        except errors.HabitNotFoundError as exc:
             raise HTTPException(
                 status_code=status_codes.HTTP_404_NOT_FOUND,
-                detail=f"У пользователя <{request.user.username}> нет привычки <{data.title}>",
+                detail=exc.message,
             )
 
-        resp = await service.update_habit_strike(HabitReturnDTO.model_validate(habit))
         return Response(HabitReturnDTO.model_validate(resp))
 
     @get(

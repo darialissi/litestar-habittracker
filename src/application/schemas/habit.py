@@ -20,6 +20,8 @@ class HabitCounterUpdateDTO(BaseModel):
 
     title: str = Field(min_length=2, max_length=50)
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class HabitReturnDTO(BaseModel):
     """

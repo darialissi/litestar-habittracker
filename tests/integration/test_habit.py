@@ -2,7 +2,7 @@ import pytest
 from litestar import Litestar, Response, status_codes
 from litestar.testing import AsyncTestClient
 
-from application.schemas.habit import HabitDTO, HabitReturnDTO
+from application.schemas.habit import HabitDTO, HabitCounterUpdateDTO, HabitReturnDTO
 from application.schemas.user import UserDTO
 
 
@@ -56,14 +56,14 @@ class TestHabit:
         add_habit_fixture,
         auth_data: UserDTO,
         token_cookie: dict,
-        habit_data: HabitDTO,
+        habit_counter_data: HabitCounterUpdateDTO,
         test_client: AsyncTestClient[Litestar],
     ):
 
         resp: Response[HabitReturnDTO] = await test_client.patch(
-            "/api/habits", params=habit_data.model_dump(), cookies=token_cookie
+            "/api/habits", data=habit_counter_data.model_dump_json(), cookies=token_cookie
         )
 
-        assert resp.status_code == status_codes.HTTP_200_OK
+        assert resp.status_code == status_codes.HTTP_200_OK, resp.json()
         assert resp.json().get("current_streak_days") == 1
         assert resp.json().get("max_streak_days") == 1
