@@ -40,10 +40,16 @@ pytest tests/unit
 ### Integration
 
 ```
+pytest tests/integration
+```
+
+### E2E
+
+```
 # Поднимаем тестовую БД
 docker compose --profile test up -d
 ```
 
 ```
-pytest tests/integration
+pytest tests/e2e
 ```

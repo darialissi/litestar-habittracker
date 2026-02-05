@@ -1,3 +1,4 @@
+import uvicorn
 from litestar import Litestar, Router
 from litestar.middleware.base import DefineMiddleware
 from litestar.openapi import OpenAPIConfig
@@ -40,6 +41,4 @@ app = Litestar(
 )
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)

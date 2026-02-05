@@ -6,12 +6,12 @@ from application.schemas.user import UserDTO, UserReturnDTO
 
 
 @pytest.mark.asyncio
-@pytest.mark.integration
+@pytest.mark.e2e
 class TestUser:
 
-    async def test_signin(self, auth_data: UserDTO, test_client: AsyncTestClient[Litestar]):
+    async def test_signin(self, auth_data: UserDTO, test_client_with_db: AsyncTestClient[Litestar]):
 
-        resp: Response[UserReturnDTO] = await test_client.post(
+        resp: Response[UserReturnDTO] = await test_client_with_db.post(
             "/api/account/signin", data=auth_data.model_dump_json()
         )
 
@@ -22,11 +22,11 @@ class TestUser:
         self,
         auth_data: UserDTO,
         token_cookie: dict,
-        test_client: AsyncTestClient[Litestar],
+        test_client_with_db: AsyncTestClient[Litestar],
         signin_fixture,
     ):
 
-        resp: Response[UserReturnDTO] = await test_client.get(
+        resp: Response[UserReturnDTO] = await test_client_with_db.get(
             "/api/account/me", cookies=token_cookie
         )
 

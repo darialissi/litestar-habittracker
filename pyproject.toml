@@ -32,7 +32,8 @@ asyncio_default_fixture_loop_scope = "session"
 filterwarnings = "ignore::DeprecationWarning"
 markers = [  
     "integration: mark a test as an integration test",   
-    "unit: mark a test as a unit test",      
+    "unit: mark a test as a unit test",       
+    "e2e: mark a test as an end-to-end test",      
     "validation: mark a test as a validation test",               
 ] 
 addopts = "--import-mode=importlib"
