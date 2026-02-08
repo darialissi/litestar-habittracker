@@ -6,6 +6,7 @@ from litestar import Litestar
 from litestar.testing import AsyncTestClient
 
 from app import app
+from application.schemas.enums import Period
 from application.schemas.habit import HabitCounterUpdateDTO, HabitDTO
 from application.schemas.user import UserDTO
 from config import settings
@@ -38,7 +39,7 @@ def auth_data() -> UserDTO:
 
 @pytest.fixture
 def habit_data() -> HabitDTO:
-    return HabitDTO(title="Чтение тех. литературы")
+    return HabitDTO(title="Чтение тех. литературы", count=3, period=Period.WEEKLY.name)
 
 
 @pytest.fixture

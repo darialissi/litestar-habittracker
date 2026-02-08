@@ -4,6 +4,7 @@ import pytest
 from litestar import Litestar, Response, status_codes
 from litestar.testing import AsyncTestClient
 
+from application.schemas.enums import Period
 from application.schemas.habit import HabitReturnDTO
 from application.services.habit import HabitService
 
@@ -18,9 +19,29 @@ from application.services.habit import HabitService
     """,
     [
         pytest.param(
-            dict(title="test habit"),
+            dict(title="test habit", count=2, period=Period.WEEKLY.name),
             status_codes.HTTP_201_CREATED,
             id="OK",
+        ),
+        pytest.param(
+            dict(title="test habit"),
+            status_codes.HTTP_201_CREATED,
+            id="OK: default count/period",
+        ),
+        pytest.param(
+            dict(title="test habit", count=0),
+            status_codes.HTTP_400_BAD_REQUEST,
+            id="FAIL: invalid count",
+        ),
+        pytest.param(
+            dict(title="test habit", period=""),
+            status_codes.HTTP_400_BAD_REQUEST,
+            id="FAIL: empty period",
+        ),
+        pytest.param(
+            dict(title="test habit", period="UNDEFINED"),
+            status_codes.HTTP_400_BAD_REQUEST,
+            id="FAIL: undefined period",
         ),
         pytest.param(
             dict(),

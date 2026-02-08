@@ -14,8 +14,8 @@ app.debug = True
 
 @pytest.fixture
 async def test_client_with_db() -> AsyncIterator[AsyncTestClient[Litestar]]:
-    app.on_startup.append(create_tables)
-    app.on_shutdown.append(drop_tables)
+    app.on_startup = [create_tables]
+    app.on_shutdown = [drop_tables]
     async with AsyncTestClient(app=app) as client:
         yield client
 
@@ -32,5 +32,17 @@ async def add_habit_fixture(
     habit_data: HabitDTO, token_cookie: dict, test_client_with_db: AsyncTestClient[Litestar]
 ):
     await test_client_with_db.post(
+        "/api/habits", data=habit_data.model_dump_json(), cookies=token_cookie
+    )
+
+
+@pytest.fixture
+async def update_habit_fixture(
+    habit_data: HabitDTO,
+    token_cookie: dict,
+    test_client_with_db: AsyncTestClient[Litestar],
+    add_habit_fixture,
+):
+    await test_client_with_db.patch(
         "/api/habits", data=habit_data.model_dump_json(), cookies=token_cookie
     )

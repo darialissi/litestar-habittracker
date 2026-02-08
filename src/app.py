@@ -38,6 +38,7 @@ app = Litestar(
         path="/docs",
         render_plugins=[ScalarRenderPlugin()],
     ),
+    debug=True,
 )
 
 if __name__ == "__main__":

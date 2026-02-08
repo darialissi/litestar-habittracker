@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from application.services.habit import HabitService
 from application.services.user import UserService
 from domain.repositories.habit import HabitRepository
+from domain.repositories.habit_dates import HabitDatesRepository
 from domain.repositories.user import UserRepository
 
 
@@ -23,4 +24,6 @@ def user_service(session_mock: AsyncMock) -> UserService:
 
 @pytest.fixture
 def habit_service(session_mock: AsyncMock) -> HabitService:
-    return HabitService(HabitRepository(session=session_mock))
+    return HabitService(
+        HabitRepository(session=session_mock), HabitDatesRepository(session=session_mock)
+    )

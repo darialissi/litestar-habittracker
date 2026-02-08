@@ -5,7 +5,9 @@ from sqlalchemy import create_engine, pool
 
 from alembic import context
 from src.config import settings
+from src.domain.models.common import BaseWithoutID
 from src.domain.models.habit import Habit
+from src.domain.models.habit_dates import HabitDates
 from src.domain.models.user import User
 
 # this is the Alembic Config object, which provides
