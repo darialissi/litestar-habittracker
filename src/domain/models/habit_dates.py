@@ -1,18 +1,16 @@
 from datetime import date
 
-from sqlalchemy import ForeignKey
+from litestar.contrib.sqlalchemy.base import BigIntAuditBase
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .common import BaseWithoutID
 
-
-class HabitDates(BaseWithoutID):
+class HabitDates(BigIntAuditBase):
     __tablename__ = "habit_dates"
+    __table_args__ = (UniqueConstraint("habit_id", "completed_at", name="uq_habit_date"),)
 
-    completed_at: Mapped[date] = mapped_column(nullable=False, primary_key=True)
+    completed_at: Mapped[date] = mapped_column(nullable=False)
 
-    title: Mapped[str] = mapped_column(
-        ForeignKey("habits.title", ondelete="CASCADE"), primary_key=True
-    )
+    habit_id: Mapped[int] = mapped_column(ForeignKey("habits.id", ondelete="CASCADE"))
 
     habit: Mapped["Habit"] = relationship(back_populates="habit_dates")  # type: ignore # noqa: F821

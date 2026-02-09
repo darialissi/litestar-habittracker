@@ -13,7 +13,9 @@ class HabitDTO(BaseModel):
 
     title: str = Field(min_length=2, max_length=50, description="Название привычки")
     count: int = Field(
-        ge=1, default=1, description="Установленное количество выполнений привычки в заданном периоде"
+        ge=1,
+        default=1,
+        description="Установленное количество выполнений привычки в заданном периоде",
     )
     period: Literal["WEEKLY", "MONTHLY"] = Field(
         default=enums.Period.WEEKLY.name,

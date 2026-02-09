@@ -31,7 +31,7 @@ USER = dict(
         ),
     ],
 )
-async def test_auth_user(
+async def test_add_or_get_user(
     get_user_response: dict | None,
     add_user_response: dict | None,
     user_service: UserService,
@@ -49,16 +49,11 @@ async def test_auth_user(
             attribute=UserService.add_user.__name__,
             new=unittest.mock.AsyncMock(return_value=add_user_response),
         ) as mock_new_user,
-        unittest.mock.patch.object(
-            target=UserService,
-            attribute=UserService.create_token.__name__,
-            new=unittest.mock.AsyncMock(return_value="mocked_token"),
-        ),
     ):
 
-        resp: tuple[User, str] = await user_service.auth_user(data=auth_data)
+        resp: User = await user_service.add_or_get_user(data=auth_data)
 
         expected_user = mock_existing_user.return_value or mock_new_user.return_value
 
-        assert resp[0]["id"] == expected_user["id"]
-        assert resp[0]["username"] == expected_user["username"]
+        assert resp["id"] == expected_user["id"]
+        assert resp["username"] == expected_user["username"]

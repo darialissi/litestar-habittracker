@@ -4,7 +4,9 @@ import pytest
 from litestar import Litestar, Response, status_codes
 from litestar.testing import AsyncTestClient
 
+from application.schemas.auth import AuthSchema, UserSchema
 from application.schemas.user import UserReturnDTO
+from application.services.auth import AuthService
 from application.services.user import UserService
 
 USER = dict(
@@ -66,9 +68,18 @@ async def test_auth_user(
     with (
         unittest.mock.patch.object(
             target=UserService,
-            attribute=UserService.auth_user.__name__,
-            new=unittest.mock.AsyncMock(return_value=(USER, "mocked_token")),
+            attribute=UserService.add_or_get_user.__name__,
+            new=unittest.mock.AsyncMock(return_value=USER),
         ) as mock_user,
+        unittest.mock.patch.object(
+            target=AuthService,
+            attribute=AuthService.create_token.__name__,
+            new=unittest.mock.Mock(
+                return_value=AuthSchema(
+                    token="mocked_token", user=UserSchema(username=USER["username"])
+                )
+            ),
+        ),
     ):
 
         resp: Response[UserReturnDTO] = await test_client.post(
@@ -79,7 +90,7 @@ async def test_auth_user(
 
         if resp.status_code == status_codes.HTTP_201_CREATED:
             response = resp.json()
-            user = mock_user.return_value[0]
+            user = mock_user.return_value
             assert response["id"] == user["id"]
             assert response["username"] == user["username"]
             assert resp.headers.get("set-cookie") is not None

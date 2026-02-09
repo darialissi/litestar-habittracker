@@ -33,4 +33,4 @@ class Token:
         try:
             return jwt.decode(token, private_key, algorithms=["HS256"])
         except jwt.exceptions.InvalidTokenError:
-            raise
+            raise ValueError("Invalid token")

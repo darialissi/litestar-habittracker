@@ -9,5 +9,10 @@ class TokenSchema(BaseModel):
     sub: str
 
 
-class UsernameSchema(BaseModel):
+class UserSchema(BaseModel):
     username: str
+
+
+class AuthSchema(BaseModel):
+    user: UserSchema
+    token: str

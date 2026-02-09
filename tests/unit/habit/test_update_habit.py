@@ -9,8 +9,8 @@ from application.services.habit import HabitService
 from domain.models.habit import Habit
 from domain.models.habit_dates import HabitDates
 
-HABIT = Habit(title="test habit")
-RECORD = HabitDates(title="test habit", completed_at=datetime.today())
+HABIT = Habit(id=0)
+RECORD = HabitDates(id=0, completed_at=datetime.today())
 
 
 @pytest.mark.asyncio

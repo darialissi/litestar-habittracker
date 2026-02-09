@@ -1,15 +1,19 @@
-from jwt.exceptions import InvalidTokenError
 from litestar.connection import ASGIConnection
 from litestar.exceptions import NotAuthorizedException
 from litestar.middleware import AbstractAuthenticationMiddleware, AuthenticationResult
 
+from application.schemas.auth import TokenSchema, UserSchema
+from application.services import errors
+from application.services.auth import AuthService
 from config import settings
-from utils.auth.token import Token
-
-from .schemas import TokenSchema, UsernameSchema
 
 
 class JWTAuthenticationMiddleware(AbstractAuthenticationMiddleware):
+
+    def __init__(self, auth_service_instance: AuthService, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.auth_service_instance = auth_service_instance
+
     async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
 
         token = connection.cookies.get(settings.AUTH_COOKIE)
@@ -18,11 +22,10 @@ class JWTAuthenticationMiddleware(AbstractAuthenticationMiddleware):
             raise NotAuthorizedException(detail="You are unathorized!")
 
         try:
-            decoded = Token.decode_jwt(private_key=settings.TOKEN_KEY_SECRET, token=token)
-        except InvalidTokenError:
-            raise NotAuthorizedException(detail="You are unathorized!")
+            token_decoded: TokenSchema = self.auth_service_instance.validate_token(token)
+        except errors.TokenInvalidError as exc:
+            raise NotAuthorizedException(detail=f"You are unathorized! {exc.message}")
 
-        token_decoded = TokenSchema(**decoded)
-        username = UsernameSchema(username=token_decoded.sub)
+        username = UserSchema(username=token_decoded.sub)
 
         return AuthenticationResult(user=username, auth=token)

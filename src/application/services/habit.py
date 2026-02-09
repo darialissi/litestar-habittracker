@@ -26,7 +26,7 @@ class HabitService:
         today = datetime.now(timezone.utc).date()
 
         # Добавляем дату выполнения привычки в отдельную таблицу
-        new_date = self.habit_dates_repo.model_type(title=habit.title, completed_at=today)
+        new_date = self.habit_dates_repo.model_type(habit_id=habit.id, completed_at=today)
         await self.habit_dates_repo.add(new_date)
 
         # Обновляем кол-во подряд выполненных дней и дату начала текущей непрерывной серии
@@ -41,6 +41,7 @@ class HabitService:
 
         updated = await self.habit_repo.update(habit)
         await self.habit_repo.session.commit()
+        await self.habit_dates_repo.session.commit()
         return updated
 
     async def get_habit(self, **filters) -> Habit | None:
@@ -58,19 +59,19 @@ class HabitService:
 
         return await self.add_habit(data, user_fk=username)
 
-    async def get_habit_date(self, title: str, completed_at: date) -> HabitDates | None:
+    async def get_habit_date(self, id: int, completed_at: date) -> HabitDates | None:
         habit_date = await self.habit_dates_repo.get_one_or_none(
-            title=title, completed_at=completed_at
+            habit_id=id, completed_at=completed_at
         )
         return habit_date
 
-    async def get_habit_dates_desc(self, title: str, limit: int | None = None) -> list[HabitDates]:
+    async def get_habit_dates_desc(self, id: int, limit: int | None = None) -> list[HabitDates]:
         filters = [
             OrderBy(field_name=self.habit_dates_repo.model_type.completed_at, sort_order="desc"),
             LimitOffset(limit=limit, offset=0),
         ]
 
-        habit_dates = await self.habit_dates_repo.list(*filters, title=title)
+        habit_dates = await self.habit_dates_repo.list(*filters, id=id)
         return habit_dates
 
     async def update_habit(self, data: HabitDTO, username: str) -> Habit:
@@ -79,7 +80,7 @@ class HabitService:
             raise errors.HabitNotFoundError(title=data.title, username=username)
 
         existed_record = await self.get_habit_date(
-            title=habit.title, completed_at=datetime.now(timezone.utc).date()
+            id=habit.id, completed_at=datetime.now(timezone.utc).date()
         )
         if existed_record:
             raise errors.HabitAlreadyCompletedTodayError(
@@ -95,6 +96,6 @@ class HabitService:
         if not habit:
             raise errors.HabitNotFoundError(title=title, username=author)
 
-        habit_dates = await self.get_habit_dates_desc(title=title, limit=habit.period_in_days)
+        habit_dates = await self.get_habit_dates_desc(id=habit.id, limit=habit.period_in_days)
 
         return habit, habit_dates

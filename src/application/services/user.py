@@ -1,12 +1,8 @@
-from datetime import timedelta
-
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
 from application.schemas.user import UserDTO
-from config import settings
 from domain.models.user import User
 from utils.auth.password import Password
-from utils.auth.token import Token
 
 
 class UserService:
@@ -22,23 +18,13 @@ class UserService:
         await self.user_repo.session.commit()
         return user
 
-    async def create_token(self, user: UserDTO) -> str:
-        payload = {"sub": user.username}
-        token = Token.encode_jwt(
-            payload,
-            private_key=settings.TOKEN_KEY_SECRET,
-            expire=timedelta(minutes=settings.TOKEN_EXPIRE_MINUTES),
-        )
-        return token
-
     async def get_user(self, **filters) -> User | None:
         user = await self.user_repo.get_one_or_none(**filters)
         return user
 
-    async def auth_user(self, data: UserDTO) -> tuple[User, str]:
+    async def add_or_get_user(self, data: UserDTO) -> User:
 
         if not (user := await self.get_user(username=data.username)):
             user = await self.add_user(data)
 
-        token = await self.create_token(user)
-        return user, token
+        return user

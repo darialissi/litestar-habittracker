@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 class Habit(BigIntAuditBase):
     __tablename__ = "habits"
 
-    title: Mapped[str] = mapped_column(nullable=False, unique=True)
+    title: Mapped[str] = mapped_column(nullable=False)
     count: Mapped[int] = mapped_column(default=1)  # const: n times
     period: Mapped[str] = mapped_column(default="WEEKLY")  # const: period type (weekly, monthly)
     period_in_days: Mapped[int] = mapped_column(default=7)  # const: period in days

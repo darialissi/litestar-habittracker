@@ -4,6 +4,7 @@ from litestar.datastructures import State
 from litestar.di import Provide
 from litestar.exceptions import HTTPException
 
+from application.schemas.auth import TokenSchema, UserSchema
 from application.schemas.habit import (
     HabitCounterUpdateDTO,
     HabitDTO,
@@ -12,7 +13,6 @@ from application.schemas.habit import (
 )
 from application.services import errors
 from application.services.habit import HabitService
-from presentation.auth.schemas import TokenSchema, UsernameSchema
 from presentation.dependencies import habit_service
 
 
@@ -29,7 +29,7 @@ class HabitController(Controller):
     async def add_new_habit(
         self,
         data: HabitDTO,
-        request: Request[UsernameSchema, TokenSchema, State],
+        request: Request[UserSchema, TokenSchema, State],
         service: HabitService,
     ) -> Response[HabitReturnDTO]:
 
@@ -52,7 +52,7 @@ class HabitController(Controller):
     async def update_habit(
         self,
         data: HabitCounterUpdateDTO,
-        request: Request[UsernameSchema, TokenSchema, State],
+        request: Request[UserSchema, TokenSchema, State],
         service: HabitService,
     ) -> Response[HabitReturnDTO]:
 
@@ -78,7 +78,7 @@ class HabitController(Controller):
     )
     async def get_user_habits(
         self,
-        request: Request[UsernameSchema, TokenSchema, State],
+        request: Request[UserSchema, TokenSchema, State],
         service: HabitService,
     ) -> Response[list[HabitReturnDTO]]:
 
@@ -100,7 +100,7 @@ class HabitController(Controller):
     async def get_user_habit_statistics(
         self,
         title: str,
-        request: Request[UsernameSchema, TokenSchema, State],
+        request: Request[UserSchema, TokenSchema, State],
         service: HabitService,
     ) -> Response[HabitStatisticsReturn]:
 

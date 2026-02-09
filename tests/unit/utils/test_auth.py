@@ -29,7 +29,7 @@ class TestAuth:
                 {"sub": "username"},
                 "PRIVATE_KEY",
                 timedelta(seconds=0),
-                marks=pytest.mark.xfail(raises=jwt.exceptions.InvalidTokenError),
+                marks=pytest.mark.xfail(raises=ValueError),
             ),
         ],
     )

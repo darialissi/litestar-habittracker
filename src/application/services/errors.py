@@ -1,6 +1,13 @@
 from datetime import date
 
 
+class TokenInvalidError(Exception):
+    def __init__(self, token: str):
+        super().__init__()
+        self.token = token
+        self.message = f"Невалидный токен <{token}>"
+
+
 class HabitNotFoundError(Exception):
     def __init__(self, title: str, username: str):
         super().__init__()
