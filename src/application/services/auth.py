@@ -1,8 +1,9 @@
 from datetime import timedelta
 
-from application.schemas.auth import AuthSchema, TokenSchema, UserSchema
+from application.schemas.auth import AuthSchema, TokenSchema, UserCred, UserSchema
 from application.services import errors
 from domain.repositories.token import ITokenRepository
+from utils.auth.password import Password
 from utils.auth.token import Token
 
 
@@ -41,3 +42,22 @@ class AuthService:
             raise errors.TokenInvalidError(token=token)
 
         return TokenSchema(**decoded)
+
+    def hash_password(self, password: str) -> str:
+        return Password.hash_password(password)
+
+    def is_valid_password(self, password: str, hashed_password: str) -> bool:
+
+        if Password.validate_password(password=password, hashed_password=hashed_password):
+            return True
+
+        return False
+
+    def auth_user(self, cred: UserCred) -> AuthSchema | None:
+        if not self.is_valid_password(password=cred.password, hashed_password=cred.hashed_password):
+            return None
+
+        if self.token_repo is not None:
+            return self.create_and_save_token(username=cred.username)
+
+        return self.create_token(username=cred.username)

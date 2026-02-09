@@ -1,11 +1,18 @@
 from datetime import timedelta
 
-from litestar import Controller, Request, Response, get, post
+from litestar import Controller, Request, Response, get, post, status_codes
 from litestar.contrib.pydantic import PydanticDTO
 from litestar.datastructures import Cookie, State
 from litestar.di import Provide
+from litestar.exceptions import HTTPException
 
-from application.schemas.auth import AuthSchema, TokenSchema, UserSchema
+from application.schemas.auth import (
+    AuthSchema,
+    TokenSchema,
+    UserCred,
+    UserCredMasked,
+    UserSchema,
+)
 from application.schemas.user import UserDTO, UserReturnDTO
 from application.services.auth import AuthService
 from application.services.user import UserService
@@ -30,16 +37,30 @@ class UserController(Controller):
         auth_service: AuthService,
     ) -> Response[UserReturnDTO]:
 
-        user = await service.add_or_get_user(data)
+        hashed_password = auth_service.hash_password(password=data.password)
 
-        auth_result: AuthSchema = auth_service.create_token(username=data.username)
+        cred_masked = UserCredMasked(username=data.username, hashed_password=hashed_password)
+
+        user = await service.add_or_get_user(cred_masked)
+
+        cred = UserCred(
+            username=data.username, password=data.password, hashed_password=user.hashed_password
+        )
+
+        auth_user: AuthSchema | None = auth_service.auth_user(cred)
+
+        if not auth_user:
+            raise HTTPException(
+                status_code=status_codes.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials",
+            )
 
         resp = Response(
             UserReturnDTO.model_validate(user),
             cookies=[
                 Cookie(
                     key=settings.AUTH_COOKIE,
-                    value=auth_result.token,
+                    value=auth_user.token,
                     max_age=timedelta(minutes=settings.TOKEN_EXPIRE_MINUTES),
                     httponly=True,
                 )

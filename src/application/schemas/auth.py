@@ -16,3 +16,14 @@ class UserSchema(BaseModel):
 class AuthSchema(BaseModel):
     user: UserSchema
     token: str
+
+
+class UserCred(BaseModel):
+    username: str
+    password: str
+    hashed_password: str
+
+
+class UserCredMasked(BaseModel):
+    username: str
+    hashed_password: str
