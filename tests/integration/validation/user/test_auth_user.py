@@ -2,11 +2,12 @@ import unittest.mock
 from datetime import datetime, timezone
 
 import pytest
-from litestar import Litestar, Response, status_codes
+from httpx import Response
+from litestar import Litestar, status_codes
 from litestar.testing import AsyncTestClient
 
 from application.schemas.auth import AuthSchema, UserSchema
-from application.schemas.user import UserReturnDTO
+from application.schemas.responses import ResponseSchema
 from application.services.auth import AuthService
 from application.services.user import UserService
 from domain.models.user import User
@@ -96,14 +97,14 @@ async def test_auth_user(
         ),
     ):
 
-        resp: Response[UserReturnDTO] = await test_client.post(
+        response: Response[ResponseSchema] = await test_client.post(
             "/api/account/signin", json=user_dict
         )
 
-        assert resp.status_code == expected_status_code, resp.text
+        assert response.status_code == expected_status_code, response.text
 
-        if resp.status_code == status_codes.HTTP_201_CREATED:
-            response = resp.json()
+        if response.status_code == status_codes.HTTP_201_CREATED:
+            payload = response.json()["payload"]
             user: User = mock_user.return_value
-            assert response["username"] == user.username
-            assert resp.headers.get("set-cookie") is not None
+            assert payload["username"] == user.username
+            assert response.headers.get("set-cookie") is not None

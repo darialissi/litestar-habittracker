@@ -1,6 +1,6 @@
 from logging.config import fileConfig
 
-from litestar.contrib.sqlalchemy.base import BigIntAuditBase
+from advanced_alchemy.base import BigIntAuditBase
 from sqlalchemy import create_engine, pool
 
 from alembic import context

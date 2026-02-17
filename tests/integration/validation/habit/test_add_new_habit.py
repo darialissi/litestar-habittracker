@@ -1,11 +1,12 @@
 import unittest.mock
 
 import pytest
-from litestar import Litestar, Response, status_codes
+from httpx import Response
+from litestar import Litestar, status_codes
 from litestar.testing import AsyncTestClient
 
 from application.schemas.enums import Period
-from application.schemas.habit import HabitReturnDTO
+from application.schemas.responses import ResponseSchema
 from application.services.habit import HabitService
 
 
@@ -77,13 +78,13 @@ async def test_add_new_habit(
         ) as mock_habit,
     ):
 
-        resp: Response[HabitReturnDTO] = await test_client.post(
+        response: Response[ResponseSchema] = await test_client.post(
             "/api/habits", json=habit_dict, cookies=token_cookie
         )
 
-        assert resp.status_code == expected_status_code
+        assert response.status_code == expected_status_code
 
-        if resp.status_code == status_codes.HTTP_201_CREATED:
-            response = resp.json()
-            assert response["id"] == mock_habit.return_value["id"]
-            assert response["title"] == mock_habit.return_value["title"]
+        if response.status_code == status_codes.HTTP_201_CREATED:
+            payload = response.json()["payload"]
+            assert payload["id"] == mock_habit.return_value["id"]
+            assert payload["title"] == mock_habit.return_value["title"]

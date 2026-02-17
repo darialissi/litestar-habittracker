@@ -1,8 +1,10 @@
 import pytest
-from litestar import Litestar, Response, status_codes
+from httpx import Response
+from litestar import Litestar, status_codes
 from litestar.testing import AsyncTestClient
 
-from application.schemas.user import UserDTO, UserReturnDTO
+from application.schemas.responses import ResponseSchema
+from application.schemas.user import UserDTO
 
 
 @pytest.mark.asyncio
@@ -11,7 +13,7 @@ class TestUser:
 
     async def test_signin(self, auth_data: UserDTO, test_client_with_db: AsyncTestClient[Litestar]):
 
-        resp: Response[UserReturnDTO] = await test_client_with_db.post(
+        resp: Response[ResponseSchema] = await test_client_with_db.post(
             "/api/account/signin", data=auth_data.model_dump_json()
         )
 
@@ -26,10 +28,33 @@ class TestUser:
         signin_fixture,
     ):
 
-        resp: Response[UserReturnDTO] = await test_client_with_db.get(
+        response: Response[ResponseSchema] = await test_client_with_db.get(
             "/api/account/me", cookies=token_cookie
         )
 
-        assert resp.status_code == status_codes.HTTP_200_OK
-        assert resp.json().get("username") == auth_data.username
-        assert resp.json().get("id") == 1
+        assert response.status_code == status_codes.HTTP_200_OK
+
+        payload: dict = response.json()["payload"]
+
+        assert payload.get("username") == auth_data.username
+        assert payload.get("id") == 1
+
+    async def test_token(
+        self,
+        auth_data: UserDTO,
+        token_cookie: dict,
+        token: str,
+        test_client_with_db: AsyncTestClient[Litestar],
+        signin_fixture,
+    ):
+
+        response: Response[ResponseSchema] = await test_client_with_db.get(
+            "/api/account/token", cookies=token_cookie
+        )
+
+        assert response.status_code == status_codes.HTTP_200_OK
+
+        payload: dict = response.json()["payload"]
+
+        assert payload.get("user").get("username") == auth_data.username
+        assert payload.get("token") == token

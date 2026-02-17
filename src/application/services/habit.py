@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 
-from advanced_alchemy.filters import LimitOffset, OrderBy
-from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
+from advanced_alchemy.filters import OnBeforeAfter, OrderBy
+from advanced_alchemy.repository import SQLAlchemyAsyncRepository
 
 from application.schemas.habit import HabitDTO
 from application.services import errors
@@ -26,7 +26,9 @@ class HabitService:
         today = datetime.now(timezone.utc).date()
 
         # Добавляем дату выполнения привычки в отдельную таблицу
-        new_date = self.habit_dates_repo.model_type(habit_id=habit.id, completed_at=today)
+        new_date = self.habit_dates_repo.model_type(
+            habit_id=habit.id, author=habit.author, completed_at=today
+        )
         await self.habit_dates_repo.add(new_date)
 
         # Обновляем кол-во подряд выполненных дней и дату начала текущей непрерывной серии
@@ -40,8 +42,7 @@ class HabitService:
         habit.max_streak_days = max(habit.max_streak_days, habit.current_streak_days)
 
         updated = await self.habit_repo.update(habit)
-        await self.habit_repo.session.commit()
-        await self.habit_dates_repo.session.commit()
+        await self.habit_repo.session.commit()  # сессия одна для обоих репо, достаточно одного коммита
         return updated
 
     async def get_habit(self, **filters) -> Habit | None:
@@ -59,19 +60,26 @@ class HabitService:
 
         return await self.add_habit(data, user_fk=username)
 
-    async def get_habit_date(self, id: int, completed_at: date) -> HabitDates | None:
-        habit_date = await self.habit_dates_repo.get_one_or_none(
-            habit_id=id, completed_at=completed_at
-        )
+    async def get_habit_date(self, **filters) -> HabitDates | None:
+        habit_date = await self.habit_dates_repo.get_one_or_none(**filters)
         return habit_date
 
-    async def get_habit_dates_desc(self, id: int, limit: int | None = None) -> list[HabitDates]:
+    async def get_habit_dates_limited_by_date_desc(
+        self, limit_days: int, **queries
+    ) -> list[HabitDates]:
+
+        today = datetime.now(timezone.utc).date()
+        limit_date = today - timedelta(days=limit_days)
         filters = [
             OrderBy(field_name=self.habit_dates_repo.model_type.completed_at, sort_order="desc"),
-            LimitOffset(limit=limit, offset=0),
+            OnBeforeAfter(
+                field_name=self.habit_dates_repo.model_type.completed_at,
+                on_or_after=limit_date,
+                on_or_before=today,
+            ),
         ]
 
-        habit_dates = await self.habit_dates_repo.list(*filters, id=id)
+        habit_dates = await self.habit_dates_repo.list(*filters, **queries)
         return habit_dates
 
     async def update_habit(self, data: HabitDTO, username: str) -> Habit:
@@ -80,7 +88,7 @@ class HabitService:
             raise errors.HabitNotFoundError(title=data.title, username=username)
 
         existed_record = await self.get_habit_date(
-            id=habit.id, completed_at=datetime.now(timezone.utc).date()
+            habit_id=habit.id, completed_at=datetime.now(timezone.utc).date(), author=username
         )
         if existed_record:
             raise errors.HabitAlreadyCompletedTodayError(
@@ -89,13 +97,37 @@ class HabitService:
 
         return await self.update_habit_streak(habit)
 
-    async def get_current_period_habit_dates(
-        self, title: str, author: str
-    ) -> tuple[Habit, HabitDates]:
+    async def get_current_period_extended_habit(self, title: str, author: str) -> dict:
         habit = await self.get_habit(title=title, author=author)
         if not habit:
             raise errors.HabitNotFoundError(title=title, username=author)
 
-        habit_dates = await self.get_habit_dates_desc(id=habit.id, limit=habit.period_in_days)
+        habit_dates = await self.get_habit_dates_limited_by_date_desc(
+            limit_days=habit.period_in_days, habit_id=habit.id, author=author
+        )
 
-        return habit, habit_dates
+        completed_at_dates = [hd.completed_at for hd in habit_dates]
+
+        extended_habit = {**habit.__dict__, "completed_at_dates": completed_at_dates}
+
+        return extended_habit
+
+    async def get_defined_period_extended_habits(
+        self, author: str, limit_days: int = 30
+    ) -> list[dict[str, any]]:
+
+        habits = await self.get_all_habits(author=author)
+
+        extended_habits: list[dict] = []
+
+        for habit in habits:
+
+            habit_dates = await self.get_habit_dates_limited_by_date_desc(
+                limit_days=limit_days, habit_id=habit.id, author=author
+            )
+
+            completed_at_dates = [hd.completed_at for hd in habit_dates]
+
+            extended_habits.append({**habit.__dict__, "completed_at_dates": completed_at_dates})
+
+        return extended_habits

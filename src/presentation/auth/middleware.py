@@ -1,3 +1,5 @@
+from typing import Callable
+
 from litestar.connection import ASGIConnection
 from litestar.exceptions import NotAuthorizedException
 from litestar.middleware import AbstractAuthenticationMiddleware, AuthenticationResult
@@ -10,9 +12,9 @@ from config import settings
 
 class JWTAuthenticationMiddleware(AbstractAuthenticationMiddleware):
 
-    def __init__(self, auth_service_instance: AuthService, *args, **kwargs):
+    def __init__(self, auth_service: Callable, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.auth_service_instance = auth_service_instance
+        self.auth_service: AuthService = auth_service()
 
     async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
 
@@ -22,7 +24,7 @@ class JWTAuthenticationMiddleware(AbstractAuthenticationMiddleware):
             raise NotAuthorizedException(detail="You are unathorized!")
 
         try:
-            token_decoded: TokenSchema = self.auth_service_instance.validate_token(token)
+            token_decoded: TokenSchema = self.auth_service.validate_token(token)
         except errors.TokenInvalidError as exc:
             raise NotAuthorizedException(detail=f"You are unathorized! {exc.message}")
 

@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from application.schemas import enums
 
@@ -39,9 +39,9 @@ class HabitCounterUpdateDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class HabitStatisticsReturn(BaseModel):
+class ExtendedHabitReturnDTO(BaseModel):
     """
-    Схема модели Habit, валидирует вывод общей статистики
+    Расширенная схема модели Habit, включает в себя данные HabitDates, валидирует вывод
     """
 
     title: str = Field(description="Название привычки")
@@ -55,12 +55,6 @@ class HabitStatisticsReturn(BaseModel):
         description="Установленный период в днях, за который нужно выполнить привычку заданное кол-во раз"
     )
     # statistics fields
-    current_count: int = Field(
-        description="Количество выполнений привычки в текущем периоде (скользящее окно)"
-    )
-    dates_in_period: list[date] = Field(
-        description="Список дат выполнения привычки в текущем периоде (скользящее окно)"
-    )
     current_streak_start_date: date = Field(
         description="Дата начала текущей непрерывной серии выполнения привычки"
     )
@@ -70,6 +64,30 @@ class HabitStatisticsReturn(BaseModel):
     max_streak_days: int = Field(
         ge=0, description="Максимальное количество дней в непрерывной серии выполнения привычки"
     )
+
+    completed_at_dates: list[date] = Field(description="Список дат, когда привычка была выполнена")
+    current_period_count: int = Field(
+        description="Количество выполнений привычки в текущем периоде", default=0
+    )
+
+    created_at: datetime = Field(description="Дата создания привычки")
+    updated_at: datetime = Field(description="Дата последнего обновления привычки")
+
+    @model_validator(mode="after")
+    def set_current_count(self):
+        self.completed_at_dates.sort(reverse=True)
+
+        # Вычисляем кол-во выполнений в текущем периоде
+        today = datetime.now().date()
+        period_start_date = today - timedelta(days=self.period_in_days)
+
+        self.current_period_count = 0
+        for completed_date in self.completed_at_dates:
+            if completed_date < period_start_date:
+                break
+            self.current_period_count += 1
+
+        return self
 
     model_config = ConfigDict(from_attributes=True)
 

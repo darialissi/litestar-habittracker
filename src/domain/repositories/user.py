@@ -1,4 +1,4 @@
-from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
+from advanced_alchemy.repository import SQLAlchemyAsyncRepository
 
 from domain.models.user import User
 

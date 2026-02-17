@@ -22,13 +22,18 @@ async def test_client() -> AsyncIterator[AsyncTestClient[Litestar]]:
 
 
 @pytest.fixture
-def token_cookie(auth_data: UserDTO) -> dict:
+def token(auth_data: UserDTO) -> str:
     payload = {"sub": auth_data.username}
     token = Token.encode_jwt(
         payload,
         private_key=settings.TOKEN_KEY_SECRET,
         expire=timedelta(minutes=settings.TOKEN_EXPIRE_MINUTES),
     )
+    return token
+
+
+@pytest.fixture
+def token_cookie(token: str) -> dict:
     return {settings.AUTH_COOKIE: token}
 
 

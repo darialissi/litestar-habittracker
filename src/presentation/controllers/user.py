@@ -4,26 +4,26 @@ from litestar import Controller, Request, Response, get, post, status_codes
 from litestar.contrib.pydantic import PydanticDTO
 from litestar.datastructures import Cookie, State
 from litestar.di import Provide
-from litestar.exceptions import HTTPException
 
 from application.schemas.auth import (
     AuthSchema,
-    TokenSchema,
+    TokenDecodedSchema,
     UserCred,
     UserCredMasked,
     UserSchema,
 )
+from application.schemas.responses import ResponseSchema
 from application.schemas.user import UserDTO, UserReturnDTO
 from application.services.auth import AuthService
 from application.services.user import UserService
 from config import settings
-from presentation.dependencies import auth_service, user_service
+from presentation.dependencies import get_auth_service, get_user_service
 
 
 class UserController(Controller):
-    return_dto = PydanticDTO[UserReturnDTO]
+    return_dto = PydanticDTO[ResponseSchema]
 
-    dependencies = {"service": Provide(user_service), "auth_service": Provide(auth_service)}
+    dependencies = {"service": Provide(get_user_service), "auth_service": Provide(get_auth_service)}
 
     @post(
         path="/signin",
@@ -35,7 +35,9 @@ class UserController(Controller):
         data: UserDTO,
         service: UserService,
         auth_service: AuthService,
-    ) -> Response[UserReturnDTO]:
+    ) -> Response[ResponseSchema]:
+
+        response = ResponseSchema()
 
         hashed_password = auth_service.hash_password(password=data.password)
 
@@ -50,13 +52,13 @@ class UserController(Controller):
         auth_user: AuthSchema | None = auth_service.auth_user(cred)
 
         if not auth_user:
-            raise HTTPException(
-                status_code=status_codes.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials",
-            )
+            response.errors.append("Invalid credentials")
+            return Response(response, status_code=status_codes.HTTP_401_UNAUTHORIZED)
+
+        response.payload = UserReturnDTO.model_validate(user).model_dump()
 
         resp = Response(
-            UserReturnDTO.model_validate(user),
+            response,
             cookies=[
                 Cookie(
                     key=settings.AUTH_COOKIE,
@@ -75,8 +77,27 @@ class UserController(Controller):
     )
     async def get_auth_user(
         self,
-        request: Request[UserSchema, TokenSchema, State],
+        request: Request[UserSchema, TokenDecodedSchema, State],
         service: UserService,
-    ) -> Response[UserReturnDTO]:
+    ) -> Response[ResponseSchema]:
+
         resp = await service.get_user(username=request.user.username)
-        return Response(UserReturnDTO.model_validate(resp))
+
+        response = ResponseSchema(payload=UserReturnDTO.model_validate(resp).model_dump())
+
+        return Response(response)
+
+    @get(
+        path="/token",
+        summary="Получение токена активного пользователя",
+    )
+    async def get_auth_user_token(
+        self,
+        request: Request[UserSchema, TokenDecodedSchema, State],
+    ) -> Response[ResponseSchema]:
+
+        auth = AuthSchema(user=request.user, token=request.auth)
+
+        response = ResponseSchema(payload=auth.model_dump())
+
+        return Response(response)

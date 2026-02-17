@@ -8,11 +8,11 @@ from infrastructure.database import create_tables, drop_tables, sqlalchemy_plugi
 from presentation.auth.middleware import JWTAuthenticationMiddleware
 from presentation.controllers.habit import HabitController
 from presentation.controllers.user import UserController
-from presentation.dependencies import auth_service_instance
+from presentation.dependencies import get_auth_service
 
 auth_mw = DefineMiddleware(
     JWTAuthenticationMiddleware,
-    auth_service_instance=auth_service_instance,
+    auth_service=get_auth_service,
     exclude=["docs", "signin"],
 )
 

@@ -8,7 +8,7 @@ from litestar.plugins.sqlalchemy import (
 
 from config import settings
 
-engine_config = EngineConfig(echo="debug")
+engine_config = EngineConfig()
 session_config = AsyncSessionConfig(expire_on_commit=False)
 
 sqlalchemy_config = SQLAlchemyAsyncConfig(

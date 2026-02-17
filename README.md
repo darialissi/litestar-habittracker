@@ -1,3 +1,15 @@
+# Habit Tracker API
+
+✔️ REST API
+
+✔️ JWT-based authentication
+
+✔️ MCP server with stdio transport
+
+#
+
+🛠️ Litestar, FastMCP, SQLAlchemy-advanced, Alembic, Pydantic, Pytest
+
 ## Prereq
 - Python 3.11
 - Docker/docker compose (v2)
@@ -52,4 +64,32 @@ docker compose --profile test up -d
 
 ```
 pytest tests/e2e
+```
+
+## MCP configuration
+
+Токен можно получить через GET `/api/account/token`
+
+```
+  "mcpServers": {
+    "mcp-habittracker": {
+      "command": "/Users/lissi/Projects/litestar-habittracker/.venv/bin/python3",
+      "args": [
+        "/Users/lissi/Projects/litestar-habittracker/src/app_mcp.py"
+      ],
+      "env": {
+        "MCP_AUTH_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      }
+    }
+  }
+```
+
+Примеры промптов
+
+```
+Выполни анализ моих привычек за последние 10 дней.
+```
+
+```
+weekly_review
 ```
