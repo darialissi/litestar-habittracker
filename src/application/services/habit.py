@@ -1,4 +1,5 @@
-from datetime import date, datetime, timedelta, timezone
+import asyncio
+from datetime import datetime, timedelta, timezone
 
 from advanced_alchemy.filters import OnBeforeAfter, OrderBy
 from advanced_alchemy.repository import SQLAlchemyAsyncRepository
@@ -120,11 +121,15 @@ class HabitService:
 
         extended_habits: list[dict] = []
 
-        for habit in habits:
-
-            habit_dates = await self.get_habit_dates_limited_by_date_desc(
+        cors = [
+            self.get_habit_dates_limited_by_date_desc(
                 limit_days=limit_days, habit_id=habit.id, author=author
             )
+            for habit in habits
+        ]
+        results = await asyncio.gather(*cors)
+
+        for habit, habit_dates in zip(habits, results):
 
             completed_at_dates = [hd.completed_at for hd in habit_dates]
 

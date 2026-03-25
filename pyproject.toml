@@ -23,6 +23,7 @@ isort = "^5.13.2"
 Flake8-pyproject = "^1.2.3"
 pytest-asyncio = "^0.24.0"
 pytest-dotenv = "^0.5.2"
+numpy = "^2.4.3"
 
 
 [tool.poetry.group.mcp.dependencies]
@@ -38,7 +39,8 @@ filterwarnings = "ignore::DeprecationWarning"
 markers = [  
     "integration: mark a test as an integration test",   
     "unit: mark a test as a unit test",       
-    "e2e: mark a test as an end-to-end test",      
+    "e2e: mark a test as an end-to-end test",  
+    "load: mark a test as a load test",    
     "validation: mark a test as a validation test",               
 ] 
 addopts = "--import-mode=importlib"

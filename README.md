@@ -1,14 +1,14 @@
 # Habit Tracker API
 
-✔️ REST API
+🛰 REST API
 
-✔️ JWT-based authentication
+🛰 JWT-based authentication
 
-✔️ MCP server with stdio transport
+🛰 MCP server with stdio transport
 
 #
 
-🛠️ Litestar, FastMCP, SQLAlchemy-advanced, Alembic, Pydantic, Pytest
+🌋 Litestar, FastMCP, SQLAlchemy-advanced, Alembic, Pydantic, Pytest
 
 ## Prereq
 - Python 3.11
@@ -32,7 +32,7 @@ docker compose --profile prod up
 ```
 
 #
-Документация доступна на <http://127.0.0.1:8000/docs>
+Интерактивная документация доступна на <http://127.0.0.1:8000/docs>
 ![API](docs.png)
 
 
@@ -46,16 +46,21 @@ docker compose --profile prod up
 ### Unit
 
 ```
-pytest tests/unit
+pytest -m unit
 ```
 
 ### Integration
 
 ```
-pytest tests/integration
+pytest -m integration
 ```
 
-### E2E
+```
+# just validation without DB
+pytest -m validation
+```
+
+### E2E (+ load)
 
 ```
 # Поднимаем тестовую БД
@@ -63,7 +68,11 @@ docker compose --profile test up -d
 ```
 
 ```
-pytest tests/e2e
+pytest -m e2e
+```
+
+```
+pytest -s -m load
 ```
 
 ## MCP configuration

@@ -1,6 +1,7 @@
 import unittest.mock
 
 import pytest
+from pydantic import BaseModel, ConfigDict
 
 from application.schemas.habit import HabitReturnDTO
 from application.services import errors
@@ -10,35 +11,33 @@ from domain.models.habit import Habit
 HABIT = Habit(title="test habit")
 
 
+class Case(BaseModel):
+    get_habit_response: Habit | None = None
+    add_habit_response: Habit | None = None
+    is_expected_habit: bool = False
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.validation
 @pytest.mark.parametrize(
-    """
-    get_habit_response,
-    add_habit_response,
-    is_expected_habit
-    """,
+    "test_case",
     [
         pytest.param(
-            None,
-            HABIT,
-            True,
+            Case(get_habit_response=None, add_habit_response=HABIT, is_expected_habit=True),
             id="OK",
         ),
         pytest.param(
-            HABIT,
-            None,
-            False,
+            Case(get_habit_response=HABIT, add_habit_response=None, is_expected_habit=False),
             id="FAIL: habit already exists",
             marks=pytest.mark.xfail(raises=errors.HabitAlreadyExistsError),
         ),
     ],
 )
 async def test_add_new_habit(
-    get_habit_response: Habit | None,
-    add_habit_response: Habit | None,
-    is_expected_habit: bool,
+    test_case: Case,
     habit_service: HabitService,
     habit_data: HabitReturnDTO,
 ):
@@ -47,12 +46,12 @@ async def test_add_new_habit(
         unittest.mock.patch.object(
             target=HabitService,
             attribute=HabitService.get_habit.__name__,
-            new=unittest.mock.AsyncMock(return_value=get_habit_response),
+            new=unittest.mock.AsyncMock(return_value=test_case.get_habit_response),
         ),
         unittest.mock.patch.object(
             target=HabitService,
             attribute=HabitService.add_habit.__name__,
-            new=unittest.mock.AsyncMock(return_value=add_habit_response),
+            new=unittest.mock.AsyncMock(return_value=test_case.add_habit_response),
         ),
     ):
 
@@ -61,7 +60,7 @@ async def test_add_new_habit(
             username="testuser",
         )
 
-        if is_expected_habit:
+        if test_case.is_expected_habit:
             assert resp
         else:
             assert resp is None

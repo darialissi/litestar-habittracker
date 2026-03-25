@@ -1,6 +1,7 @@
 import unittest.mock
 
 import pytest
+from pydantic import BaseModel
 
 from application.schemas.user import UserDTO
 from application.services.user import UserService
@@ -11,29 +12,28 @@ USER = dict(
 )
 
 
+class Case(BaseModel):
+    get_user_response: dict | None = None
+    add_user_response: dict | None = None
+
+
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    """
-    get_user_response,
-    add_user_response
-    """,
+    "test_case",
     [
         pytest.param(
-            USER,
-            None,
+            Case(get_user_response=USER, add_user_response=None),
             id="OK - existing user",
         ),
         pytest.param(
-            None,
-            USER,
+            Case(get_user_response=None, add_user_response=USER),
             id="OK - new user",
         ),
     ],
 )
 async def test_add_or_get_user(
-    get_user_response: dict | None,
-    add_user_response: dict | None,
+    test_case: Case,
     user_service: UserService,
     auth_data: UserDTO,
 ):
@@ -42,12 +42,12 @@ async def test_add_or_get_user(
         unittest.mock.patch.object(
             target=UserService,
             attribute=UserService.get_user.__name__,
-            new=unittest.mock.AsyncMock(return_value=get_user_response),
+            new=unittest.mock.AsyncMock(return_value=test_case.get_user_response),
         ) as mock_existing_user,
         unittest.mock.patch.object(
             target=UserService,
             attribute=UserService.add_user.__name__,
-            new=unittest.mock.AsyncMock(return_value=add_user_response),
+            new=unittest.mock.AsyncMock(return_value=test_case.add_user_response),
         ) as mock_new_user,
     ):
 

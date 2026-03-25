@@ -23,7 +23,10 @@ from presentation.dependencies import get_auth_service, get_user_service
 class UserController(Controller):
     return_dto = PydanticDTO[ResponseSchema]
 
-    dependencies = {"service": Provide(get_user_service), "auth_service": Provide(get_auth_service)}
+    dependencies = {
+        "service": Provide(get_user_service),
+        "auth_service": Provide(get_auth_service, sync_to_thread=False),
+    }
 
     @post(
         path="/signin",
