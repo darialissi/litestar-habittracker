@@ -1,7 +1,7 @@
-import asyncio
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-from advanced_alchemy.filters import OnBeforeAfter, OrderBy
+from advanced_alchemy.filters import CollectionFilter, OnBeforeAfter, OrderBy
 from advanced_alchemy.repository import SQLAlchemyAsyncRepository
 
 from application.schemas.habit import HabitDTO
@@ -66,7 +66,7 @@ class HabitService:
         return habit_date
 
     async def get_habit_dates_limited_by_date_desc(
-        self, limit_days: int, **queries
+        self, limit_days: int, habit_ids: list[int], **queries
     ) -> list[HabitDates]:
 
         today = datetime.now(timezone.utc).date()
@@ -77,6 +77,9 @@ class HabitService:
                 field_name=self.habit_dates_repo.model_type.completed_at,
                 on_or_after=limit_date,
                 on_or_before=today,
+            ),
+            CollectionFilter(
+                field_name=self.habit_dates_repo.model_type.habit_id, values=habit_ids
             ),
         ]
 
@@ -104,7 +107,7 @@ class HabitService:
             raise errors.HabitNotFoundError(title=title, username=author)
 
         habit_dates = await self.get_habit_dates_limited_by_date_desc(
-            limit_days=habit.period_in_days, habit_id=habit.id, author=author
+            limit_days=habit.period_in_days, habit_ids=[habit.id], author=author
         )
 
         completed_at_dates = [hd.completed_at for hd in habit_dates]
@@ -119,20 +122,27 @@ class HabitService:
 
         habits = await self.get_all_habits(author=author)
 
+        if not habits:
+            return []
+
+        habit_ids = [habit.id for habit in habits]
+
         extended_habits: list[dict] = []
 
-        cors = [
-            self.get_habit_dates_limited_by_date_desc(
-                limit_days=limit_days, habit_id=habit.id, author=author
-            )
+        habit_dates = await self.get_habit_dates_limited_by_date_desc(
+            limit_days=limit_days, habit_ids=habit_ids, author=author
+        )
+
+        dates_by_habit_id: dict[str, list] = defaultdict(list)
+        for hd in habit_dates:
+            dates_by_habit_id[hd.habit_id].append(hd.completed_at)
+
+        extended_habits = [
+            {
+                **habit.__dict__,
+                "completed_at_dates": dates_by_habit_id.get(habit.id, []),
+            }
             for habit in habits
         ]
-        results = await asyncio.gather(*cors)
-
-        for habit, habit_dates in zip(habits, results):
-
-            completed_at_dates = [hd.completed_at for hd in habit_dates]
-
-            extended_habits.append({**habit.__dict__, "completed_at_dates": completed_at_dates})
 
         return extended_habits
